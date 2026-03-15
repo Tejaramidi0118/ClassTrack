@@ -83,17 +83,19 @@ const TodayPanel = ({ subjects, onAttendanceMarked }) => {
   };
 
   const handleAddEvent = async () => {
-    if (!eventName.trim()) return;
+    const name = eventName.trim();
+    if (!name) return;
+    setEventName(''); // Clear instantly to prevent double-submit with fast enter/click
     try {
       const res = await api.post('/calendar', {
         date: currentDate,
-        name: eventName.trim(),
+        name: name,
         event_type: eventType
       });
       setDayEvents(prev => [...prev, res.data]);
-      setEventName('');
       setShowAddEvent(false);
     } catch (err) {
+      setEventName(name); // Restore if failed
       console.error("Failed to add event", err);
     }
   };

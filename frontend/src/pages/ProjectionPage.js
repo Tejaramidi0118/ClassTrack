@@ -158,8 +158,12 @@ const ProjectionPage = () => {
                       <span>Remaining</span>
                       <strong>{proj.remaining_classes}</strong>
                     </div>
-                    <div className="proj-stat green">
-                      <span>Can Skip</span>
+                    <div className="proj-stat green" title="Classes you can safely skip right now based on current attendance.">
+                      <span>Skip (Current)</span>
+                      <strong>{proj.current_can_skip ?? '-'}</strong>
+                    </div>
+                    <div className="proj-stat green" title="Total classes you can skip out of all the remaining classes in the semester.">
+                      <span>Skip (Overall)</span>
                       <strong>{proj.can_skip}</strong>
                     </div>
                     <div className="proj-stat red">

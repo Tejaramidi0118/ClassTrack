@@ -66,10 +66,16 @@ def project_attendance(subject, holiday_dates: set, end_date: date):
             remaining_classes += classes_per_day[DAY_MAP[d.weekday()]]
         d += timedelta(days=1)
 
-    # How many can I skip?
+    # How many can I skip overall (inclusive of remaining classes)?
     total_future = conducted + remaining_classes
     min_present_needed = (threshold / 100) * total_future
     can_skip = max(0, int(present + remaining_classes - min_present_needed))
+
+    # How many can I skip right now (ignoring the existence of future classes)?
+    current_can_skip = 0
+    if conducted > 0 and current_pct >= threshold:
+        # Solves P / (C + X) >= T/100 for X
+        current_can_skip = max(0, int((100 * present - threshold * conducted) // threshold))
 
     # How many must I attend to reach threshold?
     must_attend = 0
@@ -104,6 +110,7 @@ def project_attendance(subject, holiday_dates: set, end_date: date):
         "percentage": round((present / conducted * 100) if conducted > 0 else 0, 2),
         "remaining_classes": remaining_classes,
         "can_skip": can_skip,
+        "current_can_skip": current_can_skip,
         "must_attend_to_reach_threshold": must_attend,
         "threshold_cross_date": threshold_cross_date,
         "threshold": threshold,
