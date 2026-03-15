@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { format, parseISO, isAfter } from 'date-fns';
-import { Calendar as CalIcon, Plus, Trash2 } from 'lucide-react';
+import { Calendar as CalIcon, Trash2 } from 'lucide-react';
 import api from '../utils/api';
 
 const EVENT_TYPES = {

@@ -71,6 +71,7 @@ const ProjectionPage = () => {
 
   useEffect(() => {
     if (tab === 'end-of-sem' && endDate) fetchProjections();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [endDate, tab]);
 
   useEffect(() => {
@@ -79,6 +80,7 @@ const ProjectionPage = () => {
         fetchHolidayPlan();
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [holidayStart, holidayEnd, tab]);
 
   return (

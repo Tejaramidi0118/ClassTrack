@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, Plus, Trash2, CheckCircle2, Clock, Calendar } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, Clock, Calendar } from 'lucide-react';
 import api from '../utils/api';
 
 const DAYS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
