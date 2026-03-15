@@ -60,11 +60,14 @@ const TodayPanel = ({ subjects, onAttendanceMarked }) => {
   const handleToggleHoliday = async () => {
     try {
       if (holidayId) {
-        await api.delete(`/calendar/${holidayId}`);
-        setHolidayId(null);
-        setDayEvents(prev => prev.filter(e => e.id !== holidayId));
+        // Optimistic UI Update
         setDayData(prev => ({ ...prev, is_holiday: false }));
+        setDayEvents(prev => prev.filter(e => e.id !== holidayId));
+        setHolidayId(null);
+        await api.delete(`/calendar/${holidayId}`);
       } else {
+        // Optimistic UI Update
+        setDayData(prev => ({ ...prev, is_holiday: true }));
         const res = await api.post('/calendar', {
           date: currentDate,
           name: 'Holiday',
@@ -72,7 +75,6 @@ const TodayPanel = ({ subjects, onAttendanceMarked }) => {
         });
         setHolidayId(res.data.id);
         setDayEvents(prev => [...prev, res.data]);
-        setDayData(prev => ({ ...prev, is_holiday: true }));
       }
       onAttendanceMarked();
     } catch (err) {
@@ -112,14 +114,18 @@ const TodayPanel = ({ subjects, onAttendanceMarked }) => {
 
   const handleMark = async (subjectId, slotId, status, currentStatus) => {
     try {
+      // Optimistic Update
+      setDayData(prev => ({
+        ...prev,
+        classes: prev.classes.map(c => 
+          c.slot_id === slotId ? { ...c, status: status === currentStatus ? null : status } : c
+        )
+      }));
+      // We don't wait for onAttendanceMarked to trigger the visual change anymore
+      // We call it async in the background to update the overall Dashboard subject percentages
+      
       if (status === currentStatus) {
         await api.delete('/attendance', { data: { subject_id: subjectId, slot_id: slotId, date: currentDate } });
-        setDayData(prev => ({
-          ...prev,
-          classes: prev.classes.map(c => 
-            c.slot_id === slotId ? { ...c, status: null, record_id: null } : c
-          )
-        }));
       } else {
         await api.post('/attendance', {
           subject_id: subjectId,
@@ -127,16 +133,12 @@ const TodayPanel = ({ subjects, onAttendanceMarked }) => {
           date: currentDate,
           status
         });
-        setDayData(prev => ({
-          ...prev,
-          classes: prev.classes.map(c => 
-            c.slot_id === slotId ? { ...c, status } : c
-          )
-        }));
       }
-      onAttendanceMarked();
+      onAttendanceMarked(); // Refreshes the parent Dashboard state in the background
     } catch (err) {
       console.error("Failed to mark attendance", err);
+      // Revert optimistic update on failure
+      fetchDayData(currentDate); 
     }
   };
 
