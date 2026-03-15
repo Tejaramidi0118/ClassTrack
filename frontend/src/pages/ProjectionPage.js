@@ -60,7 +60,10 @@ const ProjectionPage = () => {
   const fetchHolidayPlan = async () => {
     setLoading(true);
     try {
-      const res = await api.get(`/projection/holiday-plan?start=${holidayStart}&end=${holidayEnd}`);
+      const url = endDate 
+        ? `/projection/holiday-plan?start=${holidayStart}&end=${holidayEnd}&semester_end=${endDate}`
+        : `/projection/holiday-plan?start=${holidayStart}&end=${holidayEnd}`;
+      const res = await api.get(url);
       setPlanResult(res.data);
     } catch (err) {
       console.error(err);
@@ -246,6 +249,27 @@ const ProjectionPage = () => {
                         <strong>{sub.percentage_if_skip_all}%</strong>
                       </div>
                     </div>
+                    
+                    {!sub.safe_to_take_full_leave && sub.recovery_date && (
+                      <div style={{
+                        marginTop: '12px',
+                        background: 'rgba(239,68,68,0.06)',
+                        border: '1px solid rgba(239,68,68,0.2)',
+                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        fontSize: '13px',
+                        color: '#ef4444',
+                        fontWeight: 500
+                      }}>
+                        📆 Back above {sub.threshold}% on <strong>{new Date(sub.recovery_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}</strong> if you attend all classes after the holiday.
+                      </div>
+                    )}
+                    
+                    {!sub.safe_to_take_full_leave && !sub.recovery_date && sub.classes_in_range > 0 && (
+                      <div className="proj-warning" style={{ marginTop: '12px' }}>
+                        ⚠️ Cannot reach {sub.threshold}% before semester ends even if you attend all classes after this holiday.
+                      </div>
+                    )}
                   </div>
                 );
               })}

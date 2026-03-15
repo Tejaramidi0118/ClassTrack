@@ -23,15 +23,20 @@ def get_projection(end_date: str, user: User = Depends(get_current_user), db: Se
     return result
 
 @router.get("/holiday-plan")
-def holiday_plan(start: str, end: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def holiday_plan(start: str, end: str, semester_end: str = None, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     try:
         start_date = date.fromisoformat(start)
         end_date = date.fromisoformat(end)
+        sem_end_date = date.fromisoformat(semester_end) if semester_end else user.semester_end_date
+        if not sem_end_date:
+            sem_end_date = date.today() + timedelta(days=90)
     except:
         raise HTTPException(status_code=400, detail="Invalid dates")
 
     holidays = get_holiday_dates(user.id, db)
     result = []
+
+    from collections import defaultdict
 
     for subject in user.subjects:
         slot_days = {slot.day_of_week.value for slot in subject.timetable_slots}
@@ -55,6 +60,28 @@ def holiday_plan(start: str, end: str, user: User = Depends(get_current_user), d
         max_skip = max(0, int(present - min_present + classes_in_range))
         max_skip = min(max_skip, classes_in_range)
 
+        recovery_date = None
+        if new_pct_if_skip_all < threshold and classes_in_range > 0:
+            sim_d = end_date + timedelta(days=1)
+            sim_c = new_conducted
+            sim_p = present
+            
+            classes_per_day = defaultdict(int)
+            for slot in subject.timetable_slots:
+                classes_per_day[slot.day_of_week.value] += 1
+                
+            while sim_d <= sem_end_date:
+                day_name = DAY_MAP[sim_d.weekday()]
+                if day_name in classes_per_day and sim_d not in holidays:
+                    day_slots = classes_per_day[day_name]
+                    sim_c += day_slots
+                    sim_p += day_slots
+                    sim_pct = (sim_p / sim_c * 100) if sim_c > 0 else 0
+                    if sim_pct >= threshold:
+                        recovery_date = sim_d.isoformat()
+                        break
+                sim_d += timedelta(days=1)
+
         result.append({
             "subject_id": subject.id,
             "subject_name": subject.name,
@@ -64,6 +91,7 @@ def holiday_plan(start: str, end: str, user: User = Depends(get_current_user), d
             "must_attend": classes_in_range - max_skip,
             "safe_to_take_full_leave": max_skip >= classes_in_range,
             "percentage_if_skip_all": round(new_pct_if_skip_all, 2),
+            "recovery_date": recovery_date,
             "threshold": threshold
         })
 
