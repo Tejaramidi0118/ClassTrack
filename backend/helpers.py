@@ -15,10 +15,15 @@ security = HTTPBearer(auto_error=False)
 def hash_password(pw: str) -> str:
     return hashlib.sha256(pw.encode()).hexdigest()
 
+from sqlalchemy.orm import joinedload
+
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)) -> User:
     if not credentials:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    user = db.query(User).filter(User.token == credentials.credentials).first()
+    user = db.query(User).options(
+        joinedload(User.subjects).joinedload(Subject.timetable_slots),
+        joinedload(User.subjects).joinedload(Subject.attendance_records)
+    ).filter(User.token == credentials.credentials).first()
     if not user:
         raise HTTPException(status_code=401, detail="Invalid token")
     return user
