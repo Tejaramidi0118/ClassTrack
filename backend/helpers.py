@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from datetime import timedelta, date
 from collections import defaultdict
 
-from models import User, CalendarEvent, CalendarEventType, AttendanceStatus
+from models import User, CalendarEvent, CalendarEventType, AttendanceStatus, Subject
 from database import get_db
 
 security = HTTPBearer(auto_error=False)

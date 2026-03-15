@@ -26,10 +26,12 @@ def generate_notifications(user: User, db: Session):
 
     # 2. Check for low attendance (warning threshold)
     for subject in user.subjects:
-        if subject.conducted == 0:
+        holidays = set() # Ideally passed from caller, but empty is safe for basic warning threshold logic
+        from helpers import calculate_attendance_stats
+        conducted, present, current_pct = calculate_attendance_stats(subject, holidays)
+        
+        if conducted == 0:
             continue
-            
-        current_pct = (subject.present / subject.conducted) * 100
         
         if current_pct < subject.threshold:
             title = f"Critical Attendance: {subject.name}"
