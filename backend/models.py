@@ -66,6 +66,7 @@ class TimetableSlot(Base):
     subject_id = Column(Integer, ForeignKey("subjects.id"))
     day_of_week = Column(SAEnum(DayOfWeek))
     slot_time = Column(String, nullable=True)
+    duration_minutes = Column(Integer, default=50)
     subject = relationship("Subject", back_populates="timetable_slots")
 
 class AttendanceRecord(Base):

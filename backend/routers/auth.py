@@ -18,7 +18,13 @@ def register(data: UserRegister, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
-    return {"token": token, "name": user.name, "email": user.email, "semester_end_date": None}
+    return {
+        "token": token,
+        "name": user.name,
+        "email": user.email,
+        "semester_end_date": None,
+        "is_new_user": True
+    }
 
 @router.post("/login")
 def login(data: UserLogin, db: Session = Depends(get_db)):

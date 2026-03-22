@@ -12,11 +12,11 @@ def add_timetable_slot(subject_id: int, data: TimetableSlotCreate, user: User = 
     subject = db.query(Subject).filter(Subject.id == subject_id, Subject.user_id == user.id).first()
     if not subject:
         raise HTTPException(status_code=404, detail="Not found")
-    slot = TimetableSlot(subject_id=subject_id, day_of_week=data.day_of_week, slot_time=data.slot_time)
+    slot = TimetableSlot(subject_id=subject_id, day_of_week=data.day_of_week, slot_time=data.slot_time,duration_minutes=data.duration_minutes)
     db.add(slot)
     db.commit()
     db.refresh(slot)
-    return {"id": slot.id, "day_of_week": slot.day_of_week, "slot_time": slot.slot_time}
+    return {"id": slot.id, "day_of_week": slot.day_of_week, "slot_time": slot.slot_time, "duration_minutes": slot.duration_minutes}
 
 @router.post("/bulk-save")
 def bulk_save_timetable(data: TimetableBulkSave, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -43,7 +43,7 @@ def bulk_save_timetable(data: TimetableBulkSave, user: User = Depends(get_curren
         ).first()
         
         if not existing:
-            slot = TimetableSlot(subject_id=subject.id, day_of_week=item.day_of_week, slot_time=item.slot_time)
+            slot = TimetableSlot(subject_id=subject.id, day_of_week=item.day_of_week, slot_time=item.slot_time,duration_minutes=item.duration_minutes)
             db.add(slot)
             slot_count += 1
             

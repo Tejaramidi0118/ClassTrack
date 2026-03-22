@@ -4,6 +4,7 @@ import math
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
+from sqlalchemy.orm import joinedload
 from datetime import timedelta, date
 from collections import defaultdict
 
@@ -15,8 +16,9 @@ security = HTTPBearer(auto_error=False)
 def hash_password(pw: str) -> str:
     return hashlib.sha256(pw.encode()).hexdigest()
 
-from sqlalchemy.orm import joinedload
 
+def slot_weight(slot) -> int:
+    return 2 if (slot.duration_minutes or 60) > 90 else 1
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)) -> User:
     if not credentials:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -37,14 +39,18 @@ def get_holiday_dates(user_id: int, db: Session):
 def calculate_attendance_stats(subject, holiday_dates: set):
     total_conducted = subject.baseline_conducted or 0
     total_present = subject.baseline_present or 0
+
+    # Build a slot weight lookup
+    slot_weights = {slot.id: slot_weight(slot) for slot in subject.timetable_slots}
+
     for record in subject.attendance_records:
-        if record.status == AttendanceStatus.cancelled:
+        if record.status in (AttendanceStatus.cancelled, AttendanceStatus.holiday):
             continue
-        if record.status == AttendanceStatus.holiday:
-            continue
-        total_conducted += 1
+        w = slot_weights.get(record.slot_id, 1)  # default 1 if slot unknown
+        total_conducted += w
         if record.status == AttendanceStatus.present:
-            total_present += 1
+            total_present += w
+
     percentage = (total_present / total_conducted * 100) if total_conducted > 0 else 0
     return total_conducted, total_present, round(percentage, 2)
 
@@ -57,7 +63,7 @@ def project_attendance(subject, holiday_dates: set, end_date: date):
     slot_days = {slot.day_of_week.value for slot in subject.timetable_slots}
     classes_per_day = defaultdict(int)
     for slot in subject.timetable_slots:
-        classes_per_day[slot.day_of_week.value] += 1
+        classes_per_day[slot.day_of_week.value] += slot_weight(slot)
 
     remaining_classes = 0
     d = today

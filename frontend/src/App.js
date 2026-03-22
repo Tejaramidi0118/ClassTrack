@@ -7,6 +7,7 @@ import AuthPage from './pages/AuthPage';
 import Dashboard from './pages/Dashboard';
 import ProjectionPage from './pages/ProjectionPage';
 import CalendarPage from './pages/CalendarPage';
+import SetupWizard from './components/SetupWizard';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -16,8 +17,7 @@ const ProtectedRoute = ({ children }) => {
 };
 
 const Layout = ({ children }) => {
-  const { user, logout } = useAuth();
-  
+  const { user, logout, showWizard } = useAuth();
   return (
     <div className="app-shell">
       <Sidebar user={user} onLogout={logout} />
@@ -26,42 +26,20 @@ const Layout = ({ children }) => {
           {children}
         </div>
       </main>
+      {showWizard && <SetupWizard />}
     </div>
   );
 };
 
 function App() {
   const { user } = useAuth();
-
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={!user ? <AuthPage /> : <Navigate to="/" replace />} />
-        
-        <Route path="/" element={
-          <ProtectedRoute>
-            <Layout>
-              <Dashboard />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/projection" element={
-          <ProtectedRoute>
-            <Layout>
-              <ProjectionPage />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/calendar" element={
-          <ProtectedRoute>
-            <Layout>
-              <CalendarPage />
-            </Layout>
-          </ProtectedRoute>
-        } />
-
+        <Route path="/" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+        <Route path="/projection" element={<ProtectedRoute><Layout><ProjectionPage /></Layout></ProtectedRoute>} />
+        <Route path="/calendar" element={<ProtectedRoute><Layout><CalendarPage /></Layout></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

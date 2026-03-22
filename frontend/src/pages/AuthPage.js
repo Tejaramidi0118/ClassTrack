@@ -22,7 +22,11 @@ const AuthPage = () => {
         : formData;
         
       const response = await api.post(endpoint, payload);
-      login({ name: response.data.name, email: response.data.email }, response.data.token);
+      login(
+        { name: response.data.name, email: response.data.email, semester_end_date: response.data.semester_end_date },
+        response.data.token,
+        response.data.is_new_user || false
+      );
     } catch (err) {
       setError(err.response?.data?.detail || 'Authentication failed. Please try again.');
     } finally {

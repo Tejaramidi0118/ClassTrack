@@ -6,6 +6,7 @@ const TimetableModal = ({ subject, onClose, onSuccess }) => {
   const [day, setDay] = useState('monday');
   const [time, setTime] = useState('');
   const [loading, setLoading] = useState(false);
+  const [duration, setDuration] = useState(60);
 
   const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
@@ -20,10 +21,12 @@ const TimetableModal = ({ subject, onClose, onSuccess }) => {
     try {
       await api.post(`/timetable/subjects/${subject.id}/timetable`, {
         day_of_week: day,
-        slot_time: time || null
+        slot_time: time || null,
+        duration_minutes: duration
       });
-      onSuccess(); // refresh parent which passes down new subject data
+      onSuccess();
       setTime('');
+      setDuration(60);
     } catch (err) {
       console.error(err);
     } finally {
@@ -58,7 +61,10 @@ const TimetableModal = ({ subject, onClose, onSuccess }) => {
                 <div className="day-slots">
                   {daySlots.map(slot => (
                     <div key={slot.id} className="slot-chip">
-                      <span>{slot.slot_time || 'Auto'}</span>
+                      <span>
+                        {slot.slot_time || 'Auto'}
+                        {slot.duration_minutes > 90 ? ' · Lab' : ''}
+                      </span>
                       <button onClick={() => handleDelete(slot.id)}><Trash2 size={12} /></button>
                     </div>
                   ))}
@@ -86,11 +92,21 @@ const TimetableModal = ({ subject, onClose, onSuccess }) => {
               <label>Time (optional)</label>
               <input type="time" value={time} onChange={e => setTime(e.target.value)} />
             </div>
+            <div className="field" style={{ margin: 0 }}>
+              <label>Duration</label>
+              <select value={duration} onChange={e => setDuration(Number(e.target.value))}>
+                <option value={60}>1 hr</option>
+                <option value={90}>1.5 hr</option>
+                <option value={120}>2 hr (Lab)</option>
+                <option value={180}>3 hr</option>
+              </select>
+            </div>
             <button type="submit" className="btn-primary" disabled={loading} style={{ padding: '9px 12px' }}>
               <Plus size={16} />
             </button>
           </div>
         </form>
+
       </div>
     </div>
   );

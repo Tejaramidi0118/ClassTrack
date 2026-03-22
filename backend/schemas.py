@@ -28,11 +28,13 @@ class SubjectUpdate(BaseModel):
 class TimetableSlotCreate(BaseModel):
     day_of_week: DayOfWeek
     slot_time: Optional[str] = None
+    duration_minutes: int = 60
 
 class TimetableBulkSlot(BaseModel):
     subject_name: str
     day_of_week: DayOfWeek
     slot_time: str
+    duration_minutes: int = 60
 
 class TimetableBulkSave(BaseModel):
     slots: List[TimetableBulkSlot]
