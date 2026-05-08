@@ -4,8 +4,7 @@ from database import engine, Base
 
 from routers import auth, subjects, timetable, attendance, calendar, projection, notifications
 
-# Create DB tables
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="ClassTrack API")
 
